@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Video Chunk Splitter</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+<h2>Video Chunk Splitter (S3 Multipart Compatible)</h2>
+
+<input type="file" id="fileInput" />
+<br><br>
+
+<label>Chunk Size (MB): </label>
+<input type="number" id="chunkSize" value="8" min="1" style="width: 80px" />
+<br><br>
+
+<button onclick="splitFile()">Split File</button>
+
+<h3 id="status"></h3>
+
+<script>
+   async function splitFile() {
+      const file = document.getElementById("fileInput").files[0];
+      const chunkMB = parseInt(document.getElementById("chunkSize").value);
+      const chunkSize = chunkMB * 1024 * 1024;
+
+      if (!file) {
+         alert("Please select a file!");
+         return;
+      }
+
+      let totalChunks = Math.ceil(file.size / chunkSize);
+      document.getElementById("status").innerText = "Chunks: " + totalChunks;
+
+      for (let i = 0; i < totalChunks; i++) {
+         let start = i * chunkSize;
+         let end = Math.min(start + chunkSize, file.size);
+
+         let chunk = file.slice(start, end);
+         let arrayBuffer = await chunk.arrayBuffer();
+
+         let blob = new Blob([arrayBuffer]);
+         let url = URL.createObjectURL(blob);
+
+         let a = document.createElement("a");
+         a.href = url;
+         a.download = `chunk_${String(i).padStart(3, "0")}.bin`;
+         a.click();
+
+         URL.revokeObjectURL(url);
+      }
+
+      document.getElementById("status").innerText = "Done! All chunk files downloaded.";
+   }
+</script>
+</body>
+</html>
